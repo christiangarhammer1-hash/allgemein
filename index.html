@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>43 Folders</title>
+<style>
+/* Layout: Registerkarten links (Eingang, 12 Monate, 31 Tage), aufgeschlagener Ordner rechts; auf dem Handy untereinander. */
+:root{
+  color-scheme:light;
+  --bg:#EDF0EF; --surface:#FFFFFF; --ink:#17262B; --muted:#5A6A6F; --line:#C9D4D2;
+  --accent:#0E6B5F; --accent-ink:#FFFFFF; --accent-soft:#D6EBE7;
+  --month:#DCE5EA; --next:#E4E6F3;
+  --warn:#9A4A06; --warn-bg:#FBE9CF; --danger:#A32A2A; --ok:#1B7F4B;
+  --font-ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1A1D; --surface:#172428; --ink:#E6EEEC; --muted:#93A5A8; --line:#2B3C40;
+    --accent:#4CC2B0; --accent-ink:#06201C; --accent-soft:#17383A;
+    --month:#1E3138; --next:#222B40;
+    --warn:#F2B25C; --warn-bg:#3A2A12; --danger:#F08A8A; --ok:#5BD18D;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1A1D; --surface:#172428; --ink:#E6EEEC; --muted:#93A5A8; --line:#2B3C40;
+  --accent:#4CC2B0; --accent-ink:#06201C; --accent-soft:#17383A;
+  --month:#1E3138; --next:#222B40;
+  --warn:#F2B25C; --warn-bg:#3A2A12; --danger:#F08A8A; --ok:#5BD18D;
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:15px;line-height:1.45;padding-inline:16px;padding-top:env(safe-area-inset-top,0px)}
+button,input,select,textarea{font:inherit;color:inherit}
+img{max-width:100%}
+.app{max-width:1120px;margin:0 auto;padding-block:18px 72px;display:flex;flex-direction:column;gap:16px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.top h1{margin:0;font-size:28px;line-height:1.1;font-weight:700;letter-spacing:-.02em}
+.top p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.top .r{display:flex;gap:8px;flex-wrap:wrap}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:8px 13px;min-height:40px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--danger)}
+.btn.danger.ask{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.small{min-height:34px;padding:5px 10px;font-size:13.5px}
+.sync{display:inline-flex;align-items:center;gap:8px}
+.sync i{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.sync.ok i{background:var(--ok)}
+.sync.err i,.sync.out i{background:var(--warn)}
+.sync.busy i{background:var(--accent)}
+
+.banner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);border-radius:8px;padding:10px 14px}
+.banner p{margin:0;min-width:0}
+.banner .btn{border-color:var(--warn);color:var(--warn);background:transparent}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;align-items:start}
+@media (min-width:860px){
+  .layout{grid-template-columns:minmax(0,23rem) minmax(0,1fr)}
+  .index{position:sticky;top:12px}
+}
+.index{display:flex;flex-direction:column;gap:14px;min-width:0}
+.lbl{margin:0 0 8px;font:600 11.5px var(--font-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.tab{position:relative;border:1px solid var(--line);border-bottom-width:3px;background:var(--surface);color:var(--ink);border-radius:8px 8px 2px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 2px 5px;min-height:46px;min-width:0}
+.tab:hover{border-color:var(--accent)}
+.tab .n{font:600 15px var(--font-mono);font-variant-numeric:tabular-nums}
+.tab .sub{font:500 9.5px var(--font-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tab.mo{background:var(--month)}
+.tab.nm{background:var(--next)}
+.tab.void{opacity:.45}
+.tab.today{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
+.tab.sel{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tab.sel .sub{color:var(--accent-ink);opacity:.85}
+.badge{position:absolute;top:-7px;right:-5px;min-width:19px;height:19px;border-radius:10px;background:var(--ink);color:var(--bg);font:600 11px var(--font-mono);display:grid;place-items:center;padding:0 5px}
+.tab.od .badge{background:var(--warn);color:#fff}
+.tab.sel .badge{background:var(--surface);color:var(--accent)}
+.tab.inbox{flex-direction:row;justify-content:space-between;padding:10px 14px;width:100%;min-height:52px}
+.tab.inbox .n{font:700 16px var(--font-ui)}
+.tab.inbox .sub{text-transform:none;letter-spacing:0;font:400 13px var(--font-ui)}
+.grid6{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.grid31{display:grid;grid-template-columns:repeat(auto-fill,minmax(2.9rem,1fr));gap:8px}
+@media (min-width:860px){.grid31{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.legend{margin:10px 0 0;font-size:12.5px;color:var(--muted);display:flex;gap:8px;align-items:flex-start}
+.legend i{flex:none;width:14px;height:14px;border-radius:4px 4px 1px 1px;background:var(--next);border:1px solid var(--line);margin-top:2px}
+
+.panel,.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.panel{scroll-margin-top:12px}
+.ph{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.ph h2{margin:0;font-size:22px;letter-spacing:-.015em;line-height:1.2}
+.ph .sub{margin:3px 0 0;color:var(--muted);font-size:13.5px}
+.ph .cnt{font:600 12px var(--font-mono);color:var(--muted);white-space:nowrap;padding-top:6px}
+.add{display:flex;gap:8px;margin:16px 0 6px}
+.add input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:9px 12px;min-height:42px}
+.hint{margin:10px 0 0;font-size:13.5px;background:var(--accent-soft);border-radius:6px;padding:8px 12px}
+.empty{margin:20px 0 6px;color:var(--muted);padding:22px 12px;text-align:center;border:1px dashed var(--line);border-radius:8px}
+.empty strong{display:block;color:var(--ink);margin-bottom:4px}
+
+.list{list-style:none;margin:12px 0 0;padding:0}
+.item{border-top:1px solid var(--line)}
+.row{display:flex;gap:10px;align-items:center;padding:8px 0}
+.chk{flex:none;width:28px;height:28px;border-radius:6px;border:2px solid var(--muted);background:transparent;display:grid;place-items:center;cursor:pointer;color:transparent;padding:0}
+.chk.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ttl{flex:1;min-width:0;text-align:left;background:none;border:0;padding:6px 0;cursor:pointer;display:flex;flex-direction:column;gap:3px}
+.ttl .t{font-weight:600;overflow-wrap:anywhere}
+.item.done .t{text-decoration:line-through;color:var(--muted);font-weight:400}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 11.5px var(--font-mono);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+.chip.od{color:var(--warn);border-color:var(--warn);background:var(--warn-bg)}
+
+.edit{display:flex;flex-direction:column;gap:14px;padding:6px 0 18px 38px}
+@media (max-width:520px){.edit{padding-left:0}}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld>span,.edit h3{font:600 11.5px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
+.fld input,.fld textarea,.lf input,.mv select,.setup input{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:9px 12px;min-height:42px;width:100%;min-width:0}
+.fld textarea{resize:vertical;min-height:90px}
+.files{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}
+.thumb{position:relative;margin:0}
+.thumb>button:first-child{display:block;padding:0;border:1px solid var(--line);border-radius:6px;overflow:hidden;cursor:zoom-in;background:var(--bg)}
+.thumb img,.thumb .noimg{display:block;width:96px;height:96px;object-fit:cover}
+.thumb .noimg{display:grid;place-items:center;color:var(--muted);font:500 12px var(--font-mono)}
+.x{position:absolute;top:-8px;right:-8px;min-width:26px;height:26px;border-radius:13px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:13px;line-height:1;padding:0 6px}
+.x.ask{background:var(--danger);border-color:var(--danger);color:#fff}
+.fchip{position:relative;border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:10px 34px 10px 12px;max-width:100%;min-width:0}
+.fchip a,.fchip .nolink{color:var(--ink);text-decoration:none;display:flex;flex-direction:column;min-width:0}
+.fchip b{font-weight:600;overflow-wrap:anywhere}
+.fchip small{font:400 11.5px var(--font-mono);color:var(--muted)}
+.fchip a small{color:var(--accent)}
+.upl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.note{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+.links{list-style:none;margin:8px 0;padding:0;display:flex;flex-direction:column;gap:6px}
+.links li{display:flex;align-items:center;gap:8px;min-width:0}
+.links a{color:var(--accent);overflow-wrap:anywhere;min-width:0;flex:1}
+.lf{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px}
+@media (max-width:520px){.lf{grid-template-columns:minmax(0,1fr)}}
+.acts{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between}
+.mv{display:flex;flex-direction:column;gap:4px;flex:1;min-width:12rem}
+.acts .grp{display:flex;gap:8px;flex-wrap:wrap}
+.foot{margin-top:14px;display:flex;justify-content:flex-end}
+
+details.cfg{font-size:13.5px;color:var(--muted)}
+details.cfg summary{cursor:pointer;padding:6px 0}
+details.cfg .box{display:flex;flex-direction:column;gap:10px;padding:8px 0}
+.mono{font:12.5px var(--font-mono);overflow-wrap:anywhere;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--ink);user-select:all}
+
+.setup{max-width:42rem;margin:0 auto}
+.setup h1{margin:0 0 6px;font-size:28px;letter-spacing:-.02em}
+.setup ol{padding-left:1.2em;display:flex;flex-direction:column;gap:12px;margin:14px 0}
+.setup li b{font-weight:600}
+.setup .row2{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.setup .row2 input{flex:1;min-width:14rem}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;max-width:min(32rem,calc(100vw - 32px));font-size:14px;z-index:20;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.toast.err{background:var(--danger);color:#fff}
+.lightbox{position:fixed;inset:0;background:rgba(8,14,16,.88);display:grid;place-items:center;padding:16px;z-index:30;cursor:zoom-out}
+.lightbox img{max-width:100%;max-height:100%;border-radius:6px}
+.printbtn{position:fixed;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));opacity:.75;font-size:12.5px;min-height:34px;padding:5px 10px;z-index:10}
+.printbtn:hover,.printbtn:focus-visible{opacity:1}
+@media (prefers-reduced-motion:no-preference){.tab,.btn{transition:background-color .12s,border-color .12s}}
+
+@page{size:A4;margin:14mm}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  .index,.top .r,#banner,.add,.printbtn,.toast,.lightbox,.upl,.note,.acts,.lf,.x,.foot,.chk,details.cfg,.hint{display:none!important}
+  .layout{display:block}
+  .panel{border:0;padding:0}
+  .app{padding:0;max-width:none}
+  .item{break-inside:avoid}
+  .edit{padding-left:0}
+  .fld input,.fld textarea{border:0;padding:0;background:none}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <section class="setup card" id="setup" hidden></section>
+  <div id="main" hidden style="display:contents">
+    <header class="top">
+      <div>
+        <h1>43 Folders</h1>
+        <p id="today"></p>
+      </div>
+      <div class="r">
+        <button class="btn sync" id="syncBtn" data-act="sync"><i></i><span id="syncTxt">OneDrive</span></button>
+        <button class="btn" data-act="today" id="todayBtn"></button>
+      </div>
+    </header>
+    <div id="banner"></div>
+    <div class="layout">
+      <nav class="index" id="index" aria-label="Ordner"></nav>
+      <main class="panel" id="panel" tabindex="-1"></main>
+    </div>
+    <details class="cfg" id="cfg"><summary>Einstellungen</summary><div class="box" id="cfgBox"></div></details>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <div class="lightbox" id="lightbox" hidden></div>
+  <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+  <input type="file" id="fileAny" multiple hidden>
+  <button class="btn printbtn" id="printBtn" data-act="print" hidden aria-label="Aktuellen Ordner als PDF speichern oder drucken (A4)">PDF/Drucken (A4)</button>
+</div>
+
+<script>
+'use strict';
+(function(){
+  // ====== Konfiguration ======
+  // Die Client-ID aus der Microsoft-Entra-App-Registrierung kann hier fest eingetragen werden.
+  // Leer lassen: Die App fragt beim ersten Start danach.
+  var DEFAULT_CID = '';
+  var SCOPE = 'Files.ReadWrite.AppFolder offline_access';
+  var AUTH = 'https://login.microsoftonline.com/common/oauth2/v2.0';
+  var GRAPH = 'https://graph.microsoft.com/v1.0';
+  var REDIRECT = location.origin + location.pathname.replace(/index\.html$/, '');
+
+  var $ = function(s){ return document.querySelector(s); };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var pad = function(n){ return String(n).padStart(2,'0'); };
+  var lsGet = function(k){ try { return localStorage.getItem(k); } catch (e) { return null; } };
+  var lsSet = function(k, v){ try { localStorage.setItem(k, v); } catch (e) {} };
+  var lsDel = function(k){ try { localStorage.removeItem(k); } catch (e) {} };
+
+  var MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  var MON3 = ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  var WD = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+  var now = new Date();
+  var ty = now.getFullYear(), tm = now.getMonth(), td = now.getDate();
+  var todayISO = ty + '-' + pad(tm+1) + '-' + pad(td);
+  var thisYM = ty + '-' + pad(tm+1);
+  var nextM = (tm + 1) % 12;
+  var dim = function(y,m){ return new Date(y, m+1, 0).getDate(); };
+
+  // Ein Tagesordner gilt für den nächsten Tag mit dieser Nummer: heute und später noch in diesem Monat, davor schon im nächsten.
+  function dayInfo(d){
+    var y = ty, m = tm;
+    if (d < td) { m++; if (m > 11) { m = 0; y++; } }
+    var n = dim(y, m), valid = d <= n, dd = Math.min(d, n);
+    return { y:y, m:m, d:d, valid:valid, next:d < td, iso:y + '-' + pad(m+1) + '-' + pad(dd), date:new Date(y, m, dd) };
+  }
+  function monthInfo(m){ var y = m >= tm ? ty : ty + 1; return { y:y, m:m, ym:y + '-' + pad(m+1) }; }
+  var num = function(k){ return +k.slice(1); };
+  function folderTitle(k){
+    if (k === 'inbox') return 'Eingang';
+    if (k[0] === 'm') { var mi = monthInfo(num(k)); return MONTHS[mi.m] + ' ' + mi.y; }
+    var di = dayInfo(num(k));
+    return di.valid ? WD[di.date.getDay()] + ', ' + di.d + '. ' + MONTHS[di.m] : 'Tag ' + di.d;
+  }
+  function folderSub(k){
+    if (k === 'inbox') return 'Alles, was noch nicht einsortiert ist.';
+    if (k[0] === 'm') { var mi = monthInfo(num(k)); return mi.m === tm ? 'Aktueller Monat. Verteile diese Einträge auf die Tage.' : (mi.y > ty ? 'Kommt erst im nächsten Jahr dran.' : 'Kommt später in diesem Jahr dran.'); }
+    var di = dayInfo(num(k));
+    if (!di.valid) return 'Diesen Tag gibt es im ' + MONTHS[di.m] + ' nicht.';
+    if (di.d === td) return 'Heute.';
+    return di.next ? 'Dieser Tag ist in diesem Monat vorbei, der Ordner gilt für den ' + MONTHS[di.m] + '.' : 'Noch in diesem Monat.';
+  }
+  function filed(it, k){
+    var o = Object.assign({}, it, { folder:k, due:null, dueMonth:null });
+    if (k[0] === 'd') o.due = dayInfo(num(k)).iso;
+    else if (k[0] === 'm') o.dueMonth = monthInfo(num(k)).ym;
+    return o;
+  }
+  function isOverdue(it){
+    if (it.done || it.deleted) return false;
+    if (it.folder[0] === 'd') return !!it.due && it.due < todayISO;
+    if (it.folder[0] === 'm') return !!it.dueMonth && it.dueMonth < thisYM;
+    return false;
+  }
+
+  // ====== Zustand und lokaler Cache ======
+  var items = new Map();           // id -> Eintrag (gelöschte bleiben als Marker mit deleted:true)
+  var meta = { etag:null, dirty:false, trash:[] };
+  var version = 0;
+  var ui = { folder:'inbox', open:null, confirm:null, up:{}, sync:'out', syncAt:0, target:null };
+  var urls = new Map();            // OneDrive-Datei-ID -> { dl, web, t }
+  var confirmTimer = null, toastTimer = null, noteTimers = {};
+  var each = function(fn){ items.forEach(function(it){ if (!it.deleted) fn(it); }); };
+
+  function saveCache(){
+    lsSet('f43.data', JSON.stringify({ v:1, etag:meta.etag, dirty:meta.dirty, trash:meta.trash, items:Object.fromEntries(items) }));
+  }
+  function loadCache(){
+    try {
+      var c = JSON.parse(lsGet('f43.data'));
+      if (c && c.items) { Object.keys(c.items).forEach(function(k){ items.set(k, c.items[k]); }); meta.etag = c.etag || null; meta.dirty = !!c.dirty; meta.trash = c.trash || []; }
+    } catch (e) {}
+  }
+  function newId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function put(it){
+    it.updated = Date.now(); items.set(it.id, it);
+    version++; meta.dirty = true; saveCache(); render(); scheduleSync();
+    return Promise.resolve();
+  }
+  function removeItem(id){
+    var old = items.get(id);
+    ((old && old.files) || []).forEach(function(f){ meta.trash.push(f.id); });
+    items.set(id, { id:id, deleted:true, updated:Date.now() });
+    version++; meta.dirty = true; saveCache(); render(); scheduleSync();
+  }
+  function toast(msg, err){
+    var el = $('#toast');
+    el.textContent = msg; el.className = 'toast' + (err ? ' err' : ''); el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.hidden = true; }, err ? 8000 : 3500);
+  }
+
+  // ====== Anmeldung (OAuth 2.0 Code-Flow mit PKCE, ohne Bibliothek) ======
+  var tok = null;
+  var cid = function(){ return lsGet('f43.cid') || DEFAULT_CID; };
+  function loadTok(){ try { tok = JSON.parse(lsGet('f43.tok')); } catch (e) { tok = null; } }
+  function saveTok(t){ tok = t; lsSet('f43.tok', JSON.stringify(t)); }
+  function clearTok(){ tok = null; lsDel('f43.tok'); }
+  var b64u = function(buf){ var s = ''; new Uint8Array(buf).forEach(function(b){ s += String.fromCharCode(b); }); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+  var rnd = function(n){ return b64u(crypto.getRandomValues(new Uint8Array(n))); };
+
+  async function login(){
+    var v = rnd(48), st = rnd(16);
+    var ch = b64u(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v)));
+    lsSet('f43.pkce', JSON.stringify({ v:v, st:st }));
+    var p = new URLSearchParams({ client_id:cid(), response_type:'code', redirect_uri:REDIRECT, response_mode:'query', scope:SCOPE, code_challenge:ch, code_challenge_method:'S256', state:st });
+    location.href = AUTH + '/authorize?' + p.toString();
+  }
+  async function tokenReq(params){
+    var body = new URLSearchParams(Object.assign({ client_id:cid(), scope:SCOPE }, params));
+    var r = await fetch(AUTH + '/token', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, body:body });
+    var j = await r.json();
+    if (!r.ok) { var e = new Error(j.error_description || j.error || 'Anmeldung fehlgeschlagen'); e.auth = true; throw e; }
+    saveTok({ a:j.access_token, r:j.refresh_token || (tok && tok.r) || null, e:Date.now() + j.expires_in * 1000 });
+  }
+  async function handleRedirect(){
+    var q = new URLSearchParams(location.search);
+    if (!q.has('code') && !q.has('error')) return;
+    history.replaceState(null, '', location.pathname);
+    if (q.has('error')) { toast('Anmeldung fehlgeschlagen: ' + (q.get('error_description') || q.get('error')), true); return; }
+    var pk = null; try { pk = JSON.parse(lsGet('f43.pkce')); } catch (e) {}
+    lsDel('f43.pkce');
+    if (!pk || pk.st !== q.get('state')) { toast('Die Anmeldung wurde abgebrochen. Bitte erneut versuchen.', true); return; }
+    try { await tokenReq({ grant_type:'authorization_code', code:q.get('code'), redirect_uri:REDIRECT, code_verifier:pk.v }); }
+    catch (e) { toast('Anmeldung fehlgeschlagen: ' + e.message, true); }
+  }
+  async function getToken(){
+    if (!tok) return null;
+    if (tok.e > Date.now() + 60000) return tok.a;
+    if (!tok.r) { clearTok(); return null; }
+    try { await tokenReq({ grant_type:'refresh_token', refresh_token:tok.r }); return tok.a; }
+    catch (e) { if (e.auth) { clearTok(); return null; } throw e; }
+  }
+  async function g(path, opt){
+    opt = opt || {};
+    var t = await getToken();
+    if (!t) { var e1 = new Error('Nicht angemeldet'); e1.auth = true; throw e1; }
+    var r = await fetch(path.indexOf('http') === 0 ? path : GRAPH + path, Object.assign({}, opt, { headers:Object.assign({ Authorization:'Bearer ' + t }, opt.headers || {}) }));
+    if (r.status === 401) { clearTok(); var e2 = new Error('Anmeldung abgelaufen'); e2.auth = true; throw e2; }
+    return r;
+  }
+
+  // ====== OneDrive: Daten, Dateien ======
+  async function getMeta(){
+    var r = await g('/me/drive/special/approot:/data.json?$select=id,eTag,size');
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error('OneDrive antwortet mit ' + r.status);
+    return r.json();
+  }
+  async function readRemote(){
+    try {
+      var r = await g('/me/drive/special/approot:/data.json:/content');
+      if (!r.ok) throw new Error('Lesen fehlgeschlagen (' + r.status + ')');
+      return await r.json();
+    } catch (e) {
+      if (!(e instanceof TypeError)) throw e;
+      var m = await g('/me/drive/special/approot:/data.json?$select=id,@microsoft.graph.downloadUrl');
+      var j = await m.json();
+      var r2 = await fetch(j['@microsoft.graph.downloadUrl']);
+      if (!r2.ok) throw new Error('Lesen fehlgeschlagen (' + r2.status + ')');
+      return r2.json();
+    }
+  }
+  async function writeRemote(){
+    var r = await g('/me/drive/special/approot:/data.json:/content', { method:'PUT', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ v:1, items:Object.fromEntries(items) }) });
+    if (!r.ok) throw new Error('Speichern fehlgeschlagen (' + r.status + ')');
+    return r.json();
+  }
+  function mergeRemote(rem){
+    var localNewer = false;
+    var ids = new Set(Array.from(items.keys()).concat(Object.keys(rem)));
+    ids.forEach(function(id){
+      var a = items.get(id), b = rem[id];
+      if (!b) { localNewer = true; return; }
+      if (!a) { items.set(id, b); return; }
+      var ua = a.updated || 0, ub = b.updated || 0;
+      if (ub > ua) items.set(id, b); else if (ua > ub) localNewer = true;
+    });
+    var cut = Date.now() - 60 * 864e5;
+    items.forEach(function(v, k){ if (v.deleted && (v.updated || 0) < cut) items.delete(k); });
+    return localNewer;
+  }
+  var safeName = function(n){ return n.replace(/[\\\/:*?"<>|#%]/g, '_'); };
+  async function uploadFile(blob, name){
+    var base = '/me/drive/special/approot:/files/' + encodeURIComponent(newId() + '_' + safeName(name)) + ':';
+    if (blob.size < 4000000) {
+      var r = await g(base + '/content', { method:'PUT', headers:{ 'Content-Type':blob.type || 'application/octet-stream' }, body:blob });
+      if (!r.ok) throw new Error('Hochladen fehlgeschlagen (' + r.status + ')');
+      return r.json();
+    }
+    var sr = await g(base + '/createUploadSession', { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ item:{ '@microsoft.graph.conflictBehavior':'rename' } }) });
+    if (!sr.ok) throw new Error('Hochladen fehlgeschlagen (' + sr.status + ')');
+    var s = await sr.json(), CH = 327680 * 10, pos = 0, res = null;
+    while (pos < blob.size) {
+      var end = Math.min(pos + CH, blob.size);
+      var pr = await fetch(s.uploadUrl, { method:'PUT', headers:{ 'Content-Range':'bytes ' + pos + '-' + (end - 1) + '/' + blob.size }, body:blob.slice(pos, end) });
+      if (!pr.ok) throw new Error('Hochladen fehlgeschlagen (' + pr.status + ')');
+      if (pr.status === 200 || pr.status === 201) res = await pr.json();
+      pos = end;
+    }
+    if (!res) throw new Error('Hochladen unvollständig');
+    return res;
+  }
+  async function ensureUrls(it){
+    if (!tok || !it) return;
+    var need = (it.files || []).filter(function(f){ var u = urls.get(f.id); return !u || Date.now() - u.t > 40 * 60000; });
+    if (!need.length) return;
+    await Promise.all(need.map(async function(f){
+      try {
+        var r = await g('/me/drive/items/' + f.id + '?$select=id,webUrl,@microsoft.graph.downloadUrl');
+        if (r.ok) { var j = await r.json(); urls.set(f.id, { dl:j['@microsoft.graph.downloadUrl'], web:j.webUrl, t:Date.now() }); }
+        else if (r.status === 404) urls.set(f.id, { missing:true, t:Date.now() });
+      } catch (e) {}
+    }));
+    renderPanel();
+  }
+
+  // ====== Synchronisation ======
+  var syncing = false, again = false, syncTimer = null;
+  function scheduleSync(){ clearTimeout(syncTimer); syncTimer = setTimeout(sync, 1500); }
+  function setSync(s){ ui.sync = s; ui.syncAt = Date.now(); updateSyncBtn(); }
+  function updateSyncBtn(){
+    var b = $('#syncBtn'), t = $('#syncTxt'), s = ui.sync;
+    var hhmm = new Date(ui.syncAt).toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+    b.className = 'btn sync ' + (s === 'ok' ? 'ok' : s === 'syncing' ? 'busy' : s === 'err' || s === 'out' ? s : '');
+    t.textContent = s === 'ok' ? 'OneDrive · ' + hhmm : s === 'syncing' ? 'Synchronisiert …' : s === 'offline' ? 'Offline, wird nachgeholt' : s === 'err' ? 'Sync-Fehler, erneut versuchen' : 'Mit OneDrive verbinden';
+  }
+  async function sync(){
+    if (syncing) { again = true; return; }
+    if (!tok) { setSync('out'); return; }
+    if (!navigator.onLine) { setSync('offline'); return; }
+    syncing = true; setSync('syncing');
+    try {
+      var m = await getMeta();
+      if (m && m.eTag !== meta.etag) {
+        var rem = await readRemote();
+        if (rem && rem.items && mergeRemote(rem.items)) { meta.dirty = true; version++; }
+      } else if (!m) { meta.dirty = true; }
+      if (meta.dirty) {
+        var v = version;
+        var res = await writeRemote();
+        meta.etag = res.eTag;
+        if (version === v) meta.dirty = false;
+      } else if (m) { meta.etag = m.eTag; }
+      while (meta.trash.length) {
+        var fid = meta.trash[0];
+        var dr = await g('/me/drive/items/' + fid, { method:'DELETE' });
+        if (!dr.ok && dr.status !== 404) throw new Error('Löschen fehlgeschlagen (' + dr.status + ')');
+        meta.trash.shift();
+      }
+      saveCache(); render(); setSync('ok');
+    } catch (e) {
+      if (e && e.auth) setSync('out');
+      else if (e instanceof TypeError || !navigator.onLine) { setSync('offline'); toast('Keine Verbindung zu OneDrive. Änderungen bleiben gespeichert und werden später übertragen.', true); }
+      else { setSync('err'); toast('Synchronisierung fehlgeschlagen: ' + (e && e.message), true); }
+    } finally {
+      syncing = false;
+      if (again) { again = false; setTimeout(sync, 0); }
+    }
+  }
+
+  // ====== Darstellung ======
+  function counts(){
+    var c = {}, od = {};
+    each(function(it){ if (it.done) return; c[it.folder] = (c[it.folder] || 0) + 1; if (isOverdue(it)) od[it.folder] = true; });
+    return { c:c, od:od };
+  }
+  function tab(k, cls, inner, label, cn){
+    var n = cn.c[k] || 0, sel = ui.folder === k;
+    return '<button class="tab ' + cls + (sel ? ' sel' : '') + (cn.od[k] ? ' od' : '') + '" data-act="folder" data-k="' + k + '" aria-pressed="' + sel + '" aria-label="' + esc(label + (n ? ', ' + n + ' offen' : '')) + '">' +
+      inner + (n ? '<span class="badge">' + n + '</span>' : '') + '</button>';
+  }
+  function renderIndex(){
+    var cn = counts(), h = '';
+    h += '<section><h2 class="lbl">Eingang</h2>' + tab('inbox', 'inbox', '<span class="n">Eingang</span><span class="sub">noch nicht sortiert</span>', 'Eingang', cn) + '</section>';
+    h += '<section><h2 class="lbl">12 Monate</h2><div class="grid6">';
+    for (var m = 0; m < 12; m++) h += tab('m' + m, 'mo' + (m === tm ? ' today' : ''), '<span class="n">' + MON3[m] + '</span><span class="sub">' + monthInfo(m).y + '</span>', MONTHS[m] + ' ' + monthInfo(m).y, cn);
+    h += '</div></section><section><h2 class="lbl">31 Tage</h2><div class="grid31">';
+    for (var d = 1; d <= 31; d++) {
+      var di = dayInfo(d);
+      h += tab('d' + d, (di.next ? 'nm ' : '') + (di.valid ? '' : 'void ') + (d === td ? 'today' : ''), '<span class="n">' + d + '</span><span class="sub">' + (di.valid ? MON3[di.m] : '–') + '</span>', folderTitle('d' + d), cn);
+    }
+    h += '</div><p class="legend"><i></i><span>Tage vor dem heutigen gelten schon für den nächsten Monat.</span></p></section>';
+    $('#index').innerHTML = h;
+  }
+  function renderBanner(){
+    var od = 0, h = '';
+    each(function(it){ if (isOverdue(it)) od++; });
+    if (od) h += '<div class="banner" role="status"><p><strong>' + od + (od === 1 ? ' Eintrag ist' : ' Einträge sind') + ' überfällig.</strong> Der Tag oder Monat des Ordners ist vorbei.</p><button class="btn" data-act="pushall">Alle in den ' + MONTHS[nextM] + ' schieben</button></div>';
+    $('#banner').innerHTML = h;
+  }
+  function moveOptions(cur){
+    var h = '<option value="inbox"' + (cur === 'inbox' ? ' selected' : '') + '>Eingang</option><optgroup label="Monate">';
+    for (var m = 0; m < 12; m++) h += '<option value="m' + m + '"' + (cur === 'm' + m ? ' selected' : '') + '>' + MONTHS[m] + ' ' + monthInfo(m).y + '</option>';
+    h += '</optgroup><optgroup label="Tage">';
+    for (var d = 1; d <= 31; d++) { var di = dayInfo(d); h += '<option value="d' + d + '"' + (cur === 'd' + d ? ' selected' : '') + '>' + d + '. ' + (di.valid ? MONTHS[di.m] : '(kein Tag)') + '</option>'; }
+    return h + '</optgroup>';
+  }
+  var fmtSize = function(b){ return b > 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; };
+  var host = function(u){ try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return u; } };
+  var CHECK = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function itemHTML(it){
+    var open = ui.open === it.id, files = it.files || [], links = it.links || [], chips = '';
+    if (isOverdue(it)) chips += '<span class="chip od">überfällig</span>';
+    if (files.length) chips += '<span class="chip">' + files.length + (files.length === 1 ? ' Anhang' : ' Anhänge') + '</span>';
+    if (links.length) chips += '<span class="chip">' + links.length + (links.length === 1 ? ' Link' : ' Links') + '</span>';
+    if (it.notes) chips += '<span class="chip">Notiz</span>';
+    var h = '<li class="item' + (it.done ? ' done' : '') + '"><div class="row">' +
+      '<button class="chk' + (it.done ? ' on' : '') + '" data-act="toggle" data-id="' + it.id + '" aria-pressed="' + !!it.done + '" aria-label="' + (it.done ? 'Als offen markieren' : 'Als erledigt markieren') + '">' + CHECK + '</button>' +
+      '<button class="ttl" data-act="open" data-id="' + it.id + '" aria-expanded="' + open + '"><span class="t">' + esc(it.title) + '</span>' + (chips ? '<span class="meta">' + chips + '</span>' : '') + '</button></div>';
+    if (open) {
+      var tiles = files.map(function(f){
+        var ck = ui.confirm === 'f:' + f.id, u = urls.get(f.id) || {};
+        var x = '<button class="x' + (ck ? ' ask' : '') + '" data-act="rmfile" data-id="' + it.id + '" data-fid="' + esc(f.id) + '" aria-label="Anhang entfernen">' + (ck ? 'Entfernen?' : '×') + '</button>';
+        if (/^image\//.test(f.type)) {
+          return '<figure class="thumb"><button data-act="zoom" data-src="' + esc(u.dl || '') + '" aria-label="Foto vergrößern: ' + esc(f.name) + '">' +
+            (u.dl ? '<img src="' + esc(u.dl) + '" alt="' + esc(f.name) + '">' : '<span class="noimg">' + (u.missing ? 'fehlt' : tok ? 'lädt …' : 'Foto') + '</span>') + '</button>' + x + '</figure>';
+        }
+        var sub = esc((f.name.split('.').pop() || '').toUpperCase()) + ' · ' + fmtSize(f.size || 0);
+        return '<div class="fchip">' + (u.web ? '<a href="' + esc(u.web) + '" target="_blank" rel="noopener"><b>' + esc(f.name) + '</b><small>' + sub + ' · in OneDrive öffnen</small></a>' : '<span class="nolink"><b>' + esc(f.name) + '</b><small>' + sub + '</small></span>') + x + '</div>';
+      }).join('');
+      var ll = links.map(function(l, i){ return '<li><a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.label || host(l.url)) + '</a><button class="btn small" data-act="rmlink" data-id="' + it.id + '" data-i="' + i + '" aria-label="Link entfernen">Entfernen</button></li>'; }).join('');
+      var delAsk = ui.confirm === 'del:' + it.id;
+      h += '<div class="edit">' +
+        '<label class="fld"><span>Titel</span><input id="t-' + it.id + '" data-field="title" data-id="' + it.id + '" value="' + esc(it.title) + '"></label>' +
+        '<label class="fld"><span>Notizen</span><textarea id="n-' + it.id + '" data-field="notes" data-id="' + it.id + '" rows="4">' + esc(it.notes || '') + '</textarea></label>' +
+        '<div><h3>Fotos und Dokumente</h3>' + (tiles ? '<div class="files">' + tiles + '</div>' : '') +
+        (tok ? '<div class="upl"><button class="btn small" data-act="pick" data-kind="cam" data-id="' + it.id + '">Foto aufnehmen</button><button class="btn small" data-act="pick" data-kind="file" data-id="' + it.id + '">Datei wählen</button>' + (ui.up[it.id] ? '<span class="note" style="margin:0">Lädt hoch …</span>' : '') + '</div><p class="note">Jeder Dateityp. Fotos werden vor dem Hochladen verkleinert. Die Dateien liegen im App-Ordner deines OneDrive.</p>' : '<p class="note">Zum Hochladen zuerst oben mit OneDrive verbinden.</p>') + '</div>' +
+        '<div><h3>OneDrive- und Web-Links</h3>' + (ll ? '<ul class="links">' + ll + '</ul>' : '') +
+        '<form class="lf" data-form="link" data-id="' + it.id + '"><input id="lurl-' + it.id + '" placeholder="Link einfügen" inputmode="url" aria-label="Link-Adresse"><input id="llab-' + it.id + '" placeholder="Name (optional)" aria-label="Link-Name"><button class="btn small" type="submit">Hinzufügen</button></form></div>' +
+        '<div class="acts"><label class="mv"><span class="lbl" style="margin:0">Verschieben nach</span><select data-field="move" data-id="' + it.id + '">' + moveOptions(it.folder) + '</select></label>' +
+        '<div class="grp"><button class="btn small" data-act="nextmonth" data-id="' + it.id + '">In den ' + MONTHS[nextM] + '</button>' +
+        '<button class="btn small danger' + (delAsk ? ' ask' : '') + '" data-act="delete" data-id="' + it.id + '">' + (delAsk ? 'Wirklich löschen?' : 'Löschen') + '</button></div></div></div>';
+    }
+    return h + '</li>';
+  }
+  function renderPanel(){
+    var panel = $('#panel'), k = ui.folder, a = document.activeElement, keep = {};
+    panel.querySelectorAll('input[id],textarea[id]').forEach(function(e){
+      if (e.id === 'addTitle' || e.id.indexOf('lurl-') === 0 || e.id.indexOf('llab-') === 0 || e === a) keep[e.id] = e.value;
+    });
+    var focusId = a && panel.contains(a) ? a.id : null, ss = a && a.selectionStart, se = a && a.selectionEnd;
+    var list = [];
+    each(function(it){ if (it.folder === k) list.push(it); });
+    list.sort(function(x, y){ return ((x.done ? 1 : 0) - (y.done ? 1 : 0)) || ((x.created || 0) - (y.created || 0)); });
+    var open = list.filter(function(i){ return !i.done; }).length, done = list.length - open, title = folderTitle(k);
+    var h = '<div class="ph"><div><h2>' + esc(title) + '</h2><p class="sub">' + esc(folderSub(k)) + '</p></div><span class="cnt">' + open + ' offen</span></div>' +
+      '<form class="add" data-form="add"><input id="addTitle" placeholder="Neuer Eintrag in ' + esc(title) + '" autocomplete="off" aria-label="Neuer Eintrag"><button class="btn primary" type="submit">Hinzufügen</button></form>';
+    if (k === 'm' + tm && open) h += '<p class="hint">Diese Einträge gehören in den ' + MONTHS[tm] + '. Wähle bei jedem „Verschieben nach“ und lege ihn in den passenden Tag.</p>';
+    if (!list.length) h += '<div class="empty"><strong>' + (k === 'inbox' ? 'Der Eingang ist leer.' : 'Dieser Ordner ist leer.') + '</strong>' + (k === 'inbox' ? 'Schreibe oben auf, was dir einfällt. Sortiert wird später.' : 'Neue Einträge landen hier. Aus dem Eingang verschiebst du sie mit „Verschieben nach“.') + '</div>';
+    else h += '<ul class="list">' + list.map(itemHTML).join('') + '</ul>';
+    if (done) h += '<div class="foot"><button class="btn small' + (ui.confirm === 'cd' ? ' danger ask' : '') + '" data-act="cleardone">' + (ui.confirm === 'cd' ? 'Wirklich ' + done + ' entfernen?' : 'Erledigte entfernen (' + done + ')') + '</button></div>';
+    panel.innerHTML = h;
+    Object.keys(keep).forEach(function(id){ var el = document.getElementById(id); if (el) el.value = keep[id]; });
+    if (focusId) { var f = document.getElementById(focusId); if (f) { f.focus(); try { f.setSelectionRange(ss, se); } catch (e) {} } }
+  }
+  function renderCfg(){
+    $('#cfgBox').innerHTML =
+      '<div><div class="lbl">Adresse für weitere Geräte (enthält die Client-ID)</div><div class="mono">' + esc(REDIRECT + '?cid=' + cid()) + '</div></div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" data-act="logout">Von OneDrive abmelden</button><button class="btn small" data-act="resetcid">Client-ID ändern</button></div>' +
+      '<p class="note" style="margin:0">Die Anmeldung gilt etwa 24 Stunden, danach genügt ein Tipp auf „Mit OneDrive verbinden“. Bis dahin und offline arbeitest du mit der lokalen Kopie weiter.</p>';
+  }
+  function render(){
+    $('#today').textContent = new Intl.DateTimeFormat('de-DE', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).format(now);
+    $('#todayBtn').textContent = 'Heute öffnen (Tag ' + td + ')';
+    renderIndex(); renderBanner(); renderPanel(); updateSyncBtn();
+  }
+  function renderSetup(){
+    var s = $('#setup');
+    var secure = location.protocol === 'https:' || location.hostname === 'localhost';
+    s.innerHTML = '<h1>43 Folders einrichten</h1><p>Einmalige Verbindung mit deinem OneDrive. Die App liest und schreibt nur in ihrem eigenen App-Ordner.</p>' +
+      (secure ? '' : '<p class="banner">Diese Seite ist nicht über https geöffnet. Die Microsoft-Anmeldung funktioniert nur, wenn die Datei auf einer https-Adresse liegt.</p>') +
+      '<ol>' +
+      '<li><b>App registrieren.</b> Öffne <span class="mono">entra.microsoft.com</span>, melde dich mit deinem privaten Microsoft-Konto an und wähle Anwendungen, App-Registrierungen, Neue Registrierung. Name: <b>43 Folders</b>. Kontotypen: <b>Beliebiges Organisationsverzeichnis und persönliche Microsoft-Konten</b>.</li>' +
+      '<li><b>Umleitungs-URI.</b> Plattform <b>Single-Page-Anwendung (SPA)</b>, Wert genau diese Adresse:<div class="mono" style="margin-top:6px">' + esc(REDIRECT) + '</div></li>' +
+      '<li><b>Berechtigung.</b> Unter API-Berechtigungen Microsoft Graph, Delegierte Berechtigungen, <b>Files.ReadWrite.AppFolder</b> hinzufügen (offline_access ist meist schon dabei).</li>' +
+      '<li><b>Client-ID einfügen.</b> Auf der Übersichtsseite der App die „Anwendungs-(Client-)ID“ kopieren:<div class="row2"><input id="cidIn" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" aria-label="Client-ID"><button class="btn primary" data-act="savecid">Speichern</button></div></li></ol>' +
+      '<p class="note">Die Bezeichnungen im Microsoft-Portal können leicht abweichen.</p>';
+  }
+
+  // ====== Dateien ======
+  async function shrink(f){
+    var bmp = await createImageBitmap(f);
+    var s = Math.min(1, 2000 / Math.max(bmp.width, bmp.height));
+    var w = Math.round(bmp.width * s), h = Math.round(bmp.height * s);
+    var c = document.createElement('canvas'); c.width = w; c.height = h;
+    var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.drawImage(bmp, 0, 0, w, h);
+    if (bmp.close) bmp.close();
+    return await new Promise(function(r){ c.toBlob(r, 'image/jpeg', 0.85); });
+  }
+  async function prep(f){
+    var heic = /^image\/hei[cf]$/.test(f.type);
+    if (heic || (/^image\/(jpeg|png|webp)$/.test(f.type) && f.size > 400000)) {
+      try { var b = await shrink(f); if (b && (heic || b.size < f.size)) return { blob:b, name:f.name.replace(/\.\w+$/, '') + '.jpg', type:'image/jpeg' }; } catch (e) {}
+    }
+    return { blob:f, name:f.name, type:f.type || 'application/octet-stream' };
+  }
+  async function handleFiles(list, id){
+    if (!tok) { toast('Zum Hochladen zuerst mit OneDrive verbinden.', true); return; }
+    for (var i = 0; i < list.length; i++) {
+      var f = list[i];
+      ui.up[id] = (ui.up[id] || 0) + 1; renderPanel();
+      try {
+        var p = await prep(f);
+        var r = await uploadFile(p.blob, p.name);
+        var it = items.get(id);
+        if (it && !it.deleted) {
+          await put(Object.assign({}, it, { files:(it.files || []).concat([{ id:r.id, name:p.name, type:p.type, size:r.size || p.blob.size }]) }));
+          urls.delete(r.id); ensureUrls(items.get(id));
+        }
+      } catch (e) {
+        if (e && e.auth) setSync('out');
+        toast(f.name + ' konnte nicht hochgeladen werden: ' + ((e && e.message) || 'unbekannter Fehler'), true);
+      } finally { ui.up[id]--; renderPanel(); }
+    }
+  }
+
+  // ====== Aktionen ======
+  function ask(key){
+    ui.confirm = key; renderPanel();
+    clearTimeout(confirmTimer);
+    confirmTimer = setTimeout(function(){ if (ui.confirm === key) { ui.confirm = null; renderPanel(); } }, 4000);
+  }
+  function selectFolder(k){
+    ui.folder = k; ui.open = null; ui.confirm = null; render();
+    if (window.matchMedia('(max-width:859px)').matches) $('#panel').scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+  function cleanUrl(v){
+    v = v.trim(); if (!v) return null;
+    try { var u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(v) ? v : 'https://' + v); return /^https?:$/.test(u.protocol) ? u.href : null; } catch (e) { return null; }
+  }
+  function closeLb(){ var lb = $('#lightbox'); lb.hidden = true; lb.innerHTML = ''; }
+
+  document.addEventListener('click', function(ev){
+    if (!$('#lightbox').hidden) { closeLb(); return; }
+    var el = ev.target.closest('[data-act]'); if (!el) return;
+    var act = el.dataset.act, id = el.dataset.id, it = id ? items.get(id) : null;
+    if (it && it.deleted) it = null;
+    if (act === 'folder') return selectFolder(el.dataset.k);
+    if (act === 'today') return selectFolder('d' + td);
+    if (act === 'print') return window.print();
+    if (act === 'sync') { if (!tok) { login(); } else { sync(); } return; }
+    if (act === 'logout') { clearTok(); setSync('out'); toast('Von OneDrive abgemeldet. Die lokale Kopie bleibt erhalten.'); return renderPanel(); }
+    if (act === 'resetcid') { if (confirmTimer && ui.confirm === 'cid') { lsDel('f43.cid'); clearTok(); location.reload(); } else { ui.confirm = 'cid'; el.textContent = 'Wirklich ändern?'; clearTimeout(confirmTimer); confirmTimer = setTimeout(function(){ ui.confirm = null; el.textContent = 'Client-ID ändern'; }, 4000); } return; }
+    if (act === 'savecid') { var v = ($('#cidIn').value || '').trim(); if (!/^[0-9a-f-]{30,40}$/i.test(v)) { toast('Das sieht nicht wie eine Client-ID aus. Sie besteht aus Ziffern, Buchstaben und Bindestrichen.', true); return; } lsSet('f43.cid', v); location.reload(); return; }
+    if (act === 'toggle' && it) return void put(Object.assign({}, it, { done:!it.done }));
+    if (act === 'open') { ui.open = ui.open === id ? null : id; ui.confirm = null; renderPanel(); if (ui.open) ensureUrls(it); return; }
+    if (act === 'pick') { ui.target = id; var inp = $(el.dataset.kind === 'cam' ? '#fileCam' : '#fileAny'); inp.value = ''; inp.click(); return; }
+    if (act === 'zoom') { if (!el.dataset.src) return; var lb = $('#lightbox'); lb.innerHTML = '<img src="' + esc(el.dataset.src) + '" alt="">'; lb.hidden = false; ev.stopPropagation(); return; }
+    if (act === 'rmfile' && it) {
+      var fid = el.dataset.fid;
+      if (ui.confirm !== 'f:' + fid) return ask('f:' + fid);
+      ui.confirm = null; meta.trash.push(fid);
+      return void put(Object.assign({}, it, { files:(it.files || []).filter(function(f){ return f.id !== fid; }) }));
+    }
+    if (act === 'rmlink' && it) { var ls = (it.links || []).slice(); ls.splice(+el.dataset.i, 1); return void put(Object.assign({}, it, { links:ls })); }
+    if (act === 'nextmonth' && it) { ui.open = null; toast('Verschoben nach ' + MONTHS[nextM] + '.'); return void put(filed(it, 'm' + nextM)); }
+    if (act === 'delete' && it) {
+      if (ui.confirm !== 'del:' + id) return ask('del:' + id);
+      ui.confirm = null; ui.open = null; removeItem(id); toast('Eintrag gelöscht.'); return;
+    }
+    if (act === 'cleardone') {
+      if (ui.confirm !== 'cd') return ask('cd');
+      ui.confirm = null;
+      var gone = []; each(function(x){ if (x.folder === ui.folder && x.done) gone.push(x.id); });
+      gone.forEach(removeItem); toast(gone.length + ' erledigte Einträge entfernt.'); return;
+    }
+    if (act === 'pushall') {
+      var od = []; each(function(x){ if (isOverdue(x)) od.push(x); });
+      od.forEach(function(x){ put(filed(x, 'm' + nextM)); });
+      toast(od.length + (od.length === 1 ? ' Eintrag' : ' Einträge') + ' in den ' + MONTHS[nextM] + ' verschoben.');
+    }
+  });
+  document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape' && !$('#lightbox').hidden) closeLb(); });
+  document.addEventListener('submit', function(ev){
+    var f = ev.target.closest('form[data-form]'); if (!f) return;
+    ev.preventDefault();
+    if (f.dataset.form === 'add') {
+      var inp = $('#addTitle'), t = inp.value.trim(); if (!t) return;
+      inp.value = '';
+      put(filed({ id:newId(), title:t, notes:'', done:false, created:Date.now(), files:[], links:[] }, ui.folder));
+      $('#addTitle').focus();
+    } else if (f.dataset.form === 'link') {
+      var id = f.dataset.id, it = items.get(id); if (!it || it.deleted) return;
+      var u = cleanUrl($('#lurl-' + id).value);
+      if (!u) { toast('Das ist kein gültiger Link. Er muss eine Web-Adresse sein.', true); return; }
+      var lab = $('#llab-' + id).value.trim();
+      $('#lurl-' + id).value = ''; $('#llab-' + id).value = '';
+      put(Object.assign({}, it, { links:(it.links || []).concat([{ url:u, label:lab }]) }));
+    }
+  });
+  document.addEventListener('change', function(ev){
+    var e = ev.target;
+    if (e.id === 'fileCam' || e.id === 'fileAny') {
+      var files = Array.prototype.slice.call(e.files || []); e.value = '';
+      if (files.length && ui.target) handleFiles(files, ui.target);
+      return;
+    }
+    var fld = e.dataset && e.dataset.field; if (!fld) return;
+    var it = items.get(e.dataset.id); if (!it || it.deleted) return;
+    if (fld === 'title') {
+      var t = e.value.trim();
+      if (!t) { renderPanel(); return; }
+      if (t !== it.title) put(Object.assign({}, it, { title:t }));
+    } else if (fld === 'notes') {
+      clearTimeout(noteTimers[it.id]);
+      if (e.value !== (it.notes || '')) put(Object.assign({}, it, { notes:e.value }));
+    } else if (fld === 'move' && e.value !== it.folder) {
+      ui.open = null; toast('Verschoben nach ' + folderTitle(e.value) + '.'); put(filed(it, e.value));
+    }
+  });
+  document.addEventListener('input', function(ev){
+    var e = ev.target;
+    if (!e.dataset || e.dataset.field !== 'notes') return;
+    var id = e.dataset.id;
+    clearTimeout(noteTimers[id]);
+    noteTimers[id] = setTimeout(function(){
+      var it = items.get(id), el = document.getElementById('n-' + id);
+      if (it && !it.deleted && el && el.value !== (it.notes || '')) put(Object.assign({}, it, { notes:el.value }));
+    }, 1200);
+  });
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden && tok) sync(); });
+  window.addEventListener('online', function(){ if (tok) sync(); });
+  setInterval(function(){ if (!document.hidden && tok && meta) sync(); }, 60000);
+
+  // ====== Start ======
+  (async function(){
+    var q = new URLSearchParams(location.search);
+    if (q.get('cid')) { lsSet('f43.cid', q.get('cid').trim()); history.replaceState(null, '', location.pathname); }
+    loadCache(); loadTok();
+    if (!cid()) { $('#setup').hidden = false; renderSetup(); return; }
+    $('#main').hidden = false; $('#printBtn').hidden = false;
+    try { await handleRedirect(); } catch (e) {}
+    renderCfg(); render();
+    if (tok) sync(); else setSync('out');
+  })();
+})();
+</script>
+</body>
+</html>
